@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <title>Chat Bot</title>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css">
+  <link rel="stylesheet" type="text/css" href="{{ url_for('static', filename='style.css') }}">
+</head>
+
+<body>
+  <button class="btn" id="redirect-btn">Back</button>
+
+  <div class="chat-wrapper">
+    <div class="chat-container">
+      <div class="chat-header">
+        <h2>Chat Bot</h2>
+      </div>
+      <div class="chat-box" id="chat-box">
+        <!-- Chat messages will be dynamically added here -->
+      </div>
+      <div class="chat-footer">
+        <textarea class="message-input" rows="1" placeholder="Type your message here..." id="message-input"></textarea>
+        <button type="button" class="send-btn" id="send-btn">
+          <i class="fas fa-paper-plane"></i>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/js/all.min.js"></script>
+  <script>
+    const chatBox = document.getElementById("chat-box");
+    const messageInput = document.getElementById("message-input");
+    const sendBtn = document.getElementById("send-btn");
+
+    document.getElementById("redirect-btn").onclick = function() {
+    window.location.href = "https://www.google.com";
+  };
+  
+
+    function addMessage(message, isUserMessage) {
+      const messageDiv = document.createElement("div");
+      messageDiv.classList.add("message");
+
+      if (isUserMessage) {
+        messageDiv.classList.add("user-message");
+        messageDiv.innerHTML = `<p>${message}</p>`;
+      } else {
+        messageDiv.classList.add("bot-message");
+        messageDiv.innerHTML = `<p>${message}</p>`;
+      }
+
+      chatBox.appendChild(messageDiv);
+      chatBox.scrollTop = chatBox.scrollHeight;
+    }
+
+    function sendMessage() {
+      const message = messageInput.value.trim();
+      if (message !== "") {
+        addMessage(message, true);
+
+        fetch("/api", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({ message })
+        })
+          .then(response => response.json())
+          .then(data => {
+            messageInput.value = "";
+            const botMessage = data.response || 'Sorry, there was an error processing your request.';
+            addMessage(botMessage, false);
+          })
+          .catch(error => console.error(error));
+      }
+    }
+
+    sendBtn.addEventListener("click", sendMessage);
+    messageInput.addEventListener("keydown", event => {
+      if (event.keyCode === 13 && !event.shiftKey) {
+        event.preventDefault();
+        sendMessage();
+      }
+    });
+  </script>
+</body>
+
+</html>
